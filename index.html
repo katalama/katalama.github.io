@@ -153,7 +153,7 @@ Lines = {
 				
 				t.childNodes[place.x].childNodes[place.y].style["background-color"] = 'orange';
 				t.childNodes[place.x].childNodes[place.y].innerHTML = cnt;
-				console.log(place);
+				//console.log(place);
 				cnt++;
 				
 				if(place.x==placeTo.x && place.y==placeTo.y)
@@ -265,8 +265,10 @@ Lines = {
 	
 	makeMove : function(fromPlace, toPlace){
 		if (Lines.table[fromPlace.x][fromPlace.y]!=0 && Lines.table[toPlace.x][toPlace.y]==0){
-			if ( Lines.moveBall(fromPlace, toPlace) ) 
+			if ( Lines.moveBall(fromPlace, toPlace) ) {
 				Lines.startMove();
+				Lines.endMove();
+			}
 		}
 		else {
 			console.log('cant take a move');
@@ -295,7 +297,7 @@ Lines = {
 	},
 	
 	endMove: function(){
-		
+		Lines.saveGame();
 	},
 	
 	doMove: function(){
@@ -331,13 +333,37 @@ Lines = {
 			}
 			str += '</tr>';
 		}
-		str += '</table>points:' + Lines.points + ' balls:' + Lines.ballCount;
+		str += '</table>points:' + Lines.points + ( typeof window.localStorage['Lines.leader'] !== 'undefined'? '(' + window.localStorage['Lines.leader'] + ')': '') + ' balls:' + Lines.ballCount;
 		
 		document.getElementById('table').innerHTML = str;
 	},
 	
 	saveScore: function(){
+		window.localStorage['Lines.leader'] = Math.max(
+			( typeof window.localStorage['Lines.leader'] == 'undefined' ) ? 0 : window.localStorage['Lines.leader'],
+			Lines.points
+			);
+	},
 	
+	restoreGame: function(game){
+		if (game.table.length == Lines.WIDTH && game.table[0].length == Lines.HEIGHT) {
+			Lines.table = game.table;
+			Lines.points = game.points;
+			Lines.ballCount = 0;
+			for(var i=0; i<Lines.table.length; i++)
+				for(var j=0; j<Lines.table[i].length; j++)
+					if (Lines.table[i][j])
+						Lines.ballCount++;
+		}
+	},
+	
+	saveGame: function(){
+		window.localStorage['Lines.game'] = JSON.stringify({
+			table: Lines.table, 
+			points: Lines.points
+		});
+		
+		//Lines.saveScore();
 	}
 };
 
@@ -364,6 +390,10 @@ td {width:20px; height:20px; border: 1px solid rgb(0, 223, 36)}
 
 <script>
 Lines.newGame(9,9);
+
+if (typeof window.localStorage['Lines.game'] !== 'undefined')
+	Lines.restoreGame(JSON.parse(window.localStorage['Lines.game']));
+
 Lines.echoTable();
 </script>
 
