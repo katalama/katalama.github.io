@@ -26,8 +26,8 @@
 			</div>
 			<div class="choose-action-min" ng-show="currentScreen!='choose-action'" ng-click="currentScreen='choose-action';">
 				<h3>Выберите действие</h3>
-				<div class="btn-group" role="group">
-					<button class="btn btn-default" ng-class="isActiveAction(key)" ng-repeat="(key, action) in actions" ng-click="chooseAction($event, key)">{{action.title}}</button>
+				<div class="btn-group btn-block" style="margin-left:5%" role="group">
+					<button style="width:15%; height: 50px; white-space:normal" class="btn btn-default" ng-class="isActiveAction(key)" ng-repeat="(key, action) in actions" ng-click="chooseAction($event, key)">{{action.title}}</button>
 				</div>
 			</div>
 			
@@ -77,19 +77,18 @@
 			</div>
 			
 			
-
 			<!-- CHECK IN -->
 			<div class="check-in-max animate-show" ng-show="currentScreen=='check-in'">
 				<h1>Запишитесь</h1>
 				<form name="checkInForm" action="#" class="form-horizontal">
 					<div class="form-group">
 						<div class="col-sm-12">
-							<input type="text" class="form-control" id="name" placeholder="Ваше имя (обязательное)" ng-model="userName" required>
+							<input type="text ng-touched" class="form-control" id="name" placeholder="Ваше имя (обязательное)" ng-model="userName" required>
 						</div>
 					</div>
 					<div class="form-group">
 						<div class="col-sm-12">
-							<input type="text" class="form-control" id="phone" placeholder="Номер вашего телефона (обязательное)" ng-model="userPhone" required>
+							<input type="text ng-touched" class="form-control" id="phone" placeholder="Номер вашего телефона (обязательное)" ng-model="userPhone" required>
 						</div>
 					</div>
 					<div class="form-group">

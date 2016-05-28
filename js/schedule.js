@@ -33,17 +33,35 @@ angular.module('scheduleApp', ['ngAnimate'])
 		$scope.actions = [
 			{duration: 4, title: 'Примерка свадебного платья'},
 			{duration: 4, title: 'Примерка вечернего платья'},
-			{duration: 3, title: 'Примерка детского платья'},
+			{duration: 4, title: 'Примерка детского платья'},
 			{duration: 2, title: 'Забрать платье'},
 			{duration: 2, title: 'Отдать на отпаривание'},
 			{duration: 2, title: 'Отдать в хим. чистку'}
 		];
 		
-		$scope.currentScreen = 'choose-action';
+		$scope.checkInTimes = [[], [], [], [], [], []];
 		
 		$scope.chooseAction = function($event, actionId){
 			$scope.choosenAction = actionId;
 			$scope.currentScreen = 'choose-time';
+			
+			for(var i=0; i<$scope.dayNumber.length; i++){
+				var day_frmt = format($scope.dayNumber[i]);
+				var tmp = new Array(24*4);
+				if (day_frmt in $scope.busyTimes) {
+					for (var j=0; j < $scope.busyTimes[ day_frmt ].length; j++){
+						var part = $scope.busyTimes[ day_frmt ][j];
+						tmp[part] = 1;
+						for (var k=1; k<$scope.actions[$scope.choosenAction].duration; k++)
+							tmp[part-k] = (tmp[part-k]|0) | 2; // not busy, but too near
+					}
+				}
+				$scope.timesList[day_frmt] = tmp;
+			}
+			
+			if ($scope.choosenDay)
+				$scope.checkInDayClick($scope.choosenDay);
+			
 			$event.stopPropagation();
 		};
 		
@@ -56,37 +74,41 @@ angular.module('scheduleApp', ['ngAnimate'])
 			return ($scope.choosenAction == actionId) ? 'btn-warning active' : 'btn-default';
 		};
 		
-		$scope.checkInTimes = [[], [], [], [], [], []];
-		
-		$scope.holdedCheckInTimes = [
-			{time:'12.12.2012 11:15'},
-			{time:'12.12.2012 12:15'},
-			{time:'12.12.2012 12:15'},
-			{time:'12.12.2012 12:15'},
-			{time:'12.12.2012 12:15'}
-		];
-		
-		$scope.dayNumber = [];
-		var now = new Date();
-		var fd = now - ((new Date()).getDay() - 1)*60*60*24*1000;
-		
-		for (var i=0; i<7*5; i++) {
-			var day = new Date(fd + i*24*60*60*1000);
-			$scope.dayNumber[i] = day;
-		}
-		
-		$scope.getDay = function(day, week){
-			return $scope.dayNumber[(week-1)*7 + day-1].getDate();
-		};
-		
 		$scope.busyTimes = {
 			'01.06.2016' : [53, 54, 55, 56, 66, 67, 80]
 		};
 		
+		$scope.timesList = {};
+
+		$scope.init = function(){
+			$scope.currentScreen = 'choose-action';
+			
+			$scope.choosenDay = null;
+			
+			$scope.dayNumber = [];
+			var now = new Date();
+			var fd = now - ((new Date()).getDay() - 1)*60*60*24*1000;
+			
+			for (var i=0; i<7*5; i++) {
+				var day = new Date(fd + i*24*60*60*1000);
+				var day_frmt = format(day);
+				
+				$scope.dayNumber[i] = day;
+			}
+		};
+
+		$scope.getDay = function(day, week){
+			return $scope.dayNumber[(week-1)*7 + day-1].getDate();
+		};
+		
 		$scope.getTimeClass = function(time){
-			if (format($scope.choosenDay) in $scope.busyTimes){
-				if ( $scope.busyTimes[ format($scope.choosenDay) ].indexOf(time) >= 0 )
-					return 'btn-danger';
+			var day_frmt = format($scope.choosenDay);
+			if ( day_frmt in $scope.timesList){
+				if ( $scope.timesList[day_frmt][time] & 1 )
+					return 'btn-danger disabled';
+
+				if ( $scope.timesList[day_frmt][time] & 2 )
+					return 'btn-warning disabled';
 			}
 			return 'btn-success';
 		};
@@ -123,8 +145,15 @@ angular.module('scheduleApp', ['ngAnimate'])
 		};
 		
 		$scope.checkInDayClick = function( day, week){
-			var day = $scope.dayNumber[(week-1)*7 + day-1];
-			$scope.choosenDay = day;
+			if (typeof day != 'undefined' && typeof week != 'undefined') {
+				var day = $scope.dayNumber[(week-1)*7 + day-1];
+			
+				$scope.choosenDay = day;
+			}
+			else if ($scope.choosenDay)
+				var day = $scope.choosenDay;
+			else 
+				return;
 			
 			$scope.times = [];
 			for (var i=10*4; i<21*4; i++)
@@ -135,10 +164,12 @@ angular.module('scheduleApp', ['ngAnimate'])
 		}
 		
 		$scope.addCheckInTime = function(part){
-			if ($scope.checkInTimes[$scope.choosenAction].length >= 5)
+			if ($scope.checkInTimes[$scope.choosenAction].length >= 5 || $scope.timesList[format($scope.choosenDay)][part]>0)
 				return;
 			
 			var day = $scope.choosenDay;
 			$scope.checkInTimes[$scope.choosenAction].push( {time: format(day) + ' ' + formatTimePart(part) } );
 		};
+		
+		$scope.init();
 	});
