@@ -7,6 +7,10 @@ body { margin:0px; }
 	height:500px;
 }
 
+.choose-action-max  {
+	height:350px;
+}
+
 .choose-action-max div {
 	font-size: 20px;
 }
