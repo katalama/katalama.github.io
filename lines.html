@@ -1,0 +1,372 @@
+<html>
+
+<script>
+function getRandomInt(min, max){
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+Lines = {
+	WIDTH : 10,
+	HEIGHT : 10,
+	INIT_BALLS_COUNT : 4,
+	NEW_BALLS_COUNT : 3,
+	MIN_BALLS_IN_LINE : 5,
+	marks: [],
+	table: [],
+	empty: [],
+	points: 0,
+	ballCount: 0,
+	lastClear: 0,
+	
+	newGame : function(width, height){
+		document.getElementById('gameover').style.display = 'none';
+		if (width<=0 || height<=0){
+			console.log('Illegal size of game table');
+			return false;
+		}
+		
+		Lines.points = 0;
+		Lines.ballCount = 0;
+		
+		Lines.WIDTH = width || Lines.WIDTH;
+		Lines.HEIGHT = height || Lines.HEIGHT;
+		
+		Lines.empty = new Array(Lines.WIDTH);
+		for (var i=0; i<Lines.empty.length; i++){
+			var column = [];
+			for (var j=0; j<Lines.HEIGHT; j++)
+				column.push(0);
+			Lines.empty[i] = column;
+		}
+		
+		Lines.table = JSON.parse(JSON.stringify(Lines.empty));
+		Lines.marks = JSON.parse(JSON.stringify(Lines.empty));
+		
+		for(var i=0; i<Lines.INIT_BALLS_COUNT; i++)
+			Lines.addRandomBall();
+		
+		Lines.echoTable();
+	},
+	
+	clearMarks : function(){
+		Lines.marks = JSON.parse(JSON.stringify(Lines.empty));
+	},
+	
+	addRandomBall : function(){
+		var cell = getRandomInt(1, Lines.WIDTH*Lines.HEIGHT - Lines.ballCount - 1);
+		var cellPrev = cell;
+		
+		var i = 0;
+		var j = 0;
+		while (true) {
+			if(Lines.table[i][j] == 0)
+				if (cell--==0)
+					break;
+			
+			i = (i==Lines.WIDTH - 1) ? 0 : i+1;
+			
+			if (i==0)
+				j = (j==Lines.HEIGHT - 1) ? 0 : j+1;
+			
+			if (i==0 && j==0 && cellPrev==cell){
+				return false;
+			}
+		}
+		
+		Lines.addBall({x:i, y:j}, getRandomInt(1,6));
+		
+		return {x:i, y:j};
+	},
+	
+	isReachable : function(placeFrom, placeTo){
+		Lines.emp = JSON.parse(JSON.stringify(Lines.table));
+		Lines.emp[placeFrom.x][placeFrom.y] = 0;
+		Lines.emp[placeTo.x][placeTo.y] = -1;
+		t = document.getElementById('table').childNodes[0].childNodes[0];
+		
+		// deep search
+		//var check = function(){
+		//	var cnt = 0;
+		//	while (Lines.stack.length > 0) {
+		//		var place = Lines.stack.shift();
+		//		
+		//		
+		//		if (place.x<0 || place.y<0 || place.x >= Lines.WIDTH || place.y>=Lines.HEIGHT || Lines.emp[place.x][place.y]>0) 
+		//			continue;
+		//		
+		//		t.childNodes[place.x].childNodes[place.y].style["background-color"] = 'orange';
+		//		t.childNodes[place.x].childNodes[place.y].innerHTML = cnt;
+		//		console.log(place);
+		//		cnt++;
+		//		
+		//		if(place.x==placeTo.x && place.y==placeTo.y){
+		//			console.log([true, cnt]);
+		//			return true;
+		//		}
+		//		Lines.emp[place.x][place.y] = 1;
+		//		
+		//		var dx = (placeTo.x - place.x < 0) ? -1 : (placeTo.x - place.x > 0 ? 1 : 0);
+		//		var dy = (placeTo.y - place.y < 0) ? -1 : (placeTo.y - place.y > 0 ? 1 : 0);
+        //
+		//		if (dx==dy) {
+		//			dy = (dy==0) ? 1 : 0;
+		//		}
+		//		if (dx*dy != 0) 
+		//			dx = 0;
+		//		
+		//		Lines.stack.push({x:place.x+dx, y:place.y+dy});
+		//		c = dx; dx = dy; dy = -c; Lines.stack.push({x:place.x+dx, y:place.y+dy});
+		//		c = dx; dx = dy; dy = -c; Lines.stack.push({x:place.x+dx, y:place.y+dy});
+		//		c = dx; dx = dy; dy = -c; Lines.stack.push({x:place.x+dx, y:place.y+dy});
+		//		//console.log(Lines.stack);
+		//	}
+		//	console.log([false, cnt]);
+		//	return false;
+		//}
+		//
+		//cnt = 0;
+		//var check = function(x,y){
+		//	if (x<0 || y<0 || x>=Lines.WIDTH || y>=Lines.HEIGHT || Lines.emp[x][y] > 0 )
+        //
+		//	return false;
+		//	t.childNodes[x].childNodes[y].style["background-color"] = 'orange';
+		//	t.childNodes[x].childNodes[y].innerHTML = cnt;
+		//	cnt++;
+		//	
+		//	if (Lines.emp[x][y] == -1) {
+		//		return true;
+		//	}
+		//	
+		//	Lines.emp[x][y] = 1;
+		//	return check(x+1, y) || check(x-1, y) || check(x, y+1) || check(x, y-1);
+		//}
+		//
+		//return check(placeFrom.x, placeFrom.y);
+		
+		// wide search
+		var check = function(){
+			cnt = 0;
+			while (Lines.stack.length > 0) {
+				var place = Lines.stack.pop();
+				if (place.x<0 || place.y<0 || place.x >= Lines.WIDTH || place.y>=Lines.HEIGHT || Lines.emp[place.x][place.y]>0)
+					continue;
+				
+				t.childNodes[place.x].childNodes[place.y].style["background-color"] = 'orange';
+				t.childNodes[place.x].childNodes[place.y].innerHTML = cnt;
+				console.log(place);
+				cnt++;
+				
+				if(place.x==placeTo.x && place.y==placeTo.y)
+					return true;
+				
+				Lines.emp[place.x][place.y] = 1;
+				Lines.stack.push({x:place.x+1, y:place.y});
+				Lines.stack.push({x:place.x-1, y:place.y});
+				Lines.stack.push({x:place.x, y:place.y+1});
+				Lines.stack.push({x:place.x, y:place.y-1});
+			}
+			
+			return false;
+		}
+		
+		Lines.stack = [placeFrom];
+		return check();
+	},
+	
+	addBall: function(place, color){
+		Lines.table[place.x][place.y] = color;
+		Lines.ballCount++;
+		//console.log('added ball');
+		Lines.checkBall(place);
+	},
+	
+	deleteBall: function(place){
+		//console.log('deleted ball');
+		Lines.table[place.x][place.y] = 0;
+		Lines.ballCount--;
+	},
+	
+	moveBall: function(placeFrom, placeTo){
+		if (Lines.isReachable(placeFrom, placeTo)) {
+			var color = Lines.table[placeFrom.x][placeFrom.y];
+			Lines.deleteBall(placeFrom);
+			Lines.addBall(placeTo, color);
+			//console.log('ball moved');
+			return true;
+		}
+		
+		return false
+	},
+	
+	checkBall: function(place){
+		
+		checkDir = function(place, dx, dy){
+			if (dx==0 && dy==0)
+				return false;
+			
+			var color = Lines.table[place.x][place.y];
+			var x = place.x - dx;
+			var y = place.y - dy;
+			var count = 1;
+			
+			// move backward
+			while (x>=0 && y>=0 && x<Lines.WIDTH && y<Lines.HEIGHT && Lines.table[x][y]==color){
+				count++;
+				x = x - dx;
+				y = y - dy;
+			}
+			
+			x = place.x + dx;
+			y = place.y + dy;
+
+			// move forward
+			while (x>=0 && y>=0 && x<Lines.WIDTH && y<Lines.HEIGHT && Lines.table[x][y]==color){
+				count++;
+				x = x + dx;
+				y = y + dy;
+			}
+
+			if (count >= Lines.MIN_BALLS_IN_LINE){
+				Lines.points += count;
+				console.log('line found');
+				while (count){
+					Lines.markBall({x:x - dx, y:y - dy});
+					count--;
+					x = x - dx;
+					y = y - dy;
+				}
+			}
+			return count;
+		}
+		
+		checkDir(place,1,1);
+		checkDir(place,1,0);
+		checkDir(place,0,1);
+		checkDir(place,1,-1);
+	},
+	
+	markBall: function(place){
+		Lines.marks[place.x][place.y] = 1;
+	},
+	
+	clearMarked: function(){
+		var hasMarks = false;
+		for(var i=0; i<Lines.WIDTH; i++){
+			for(var j=0; j<Lines.HEIGHT; j++){
+				if (Lines.marks[i][j]) {
+					hasMarks = true;
+					Lines.deleteBall({x:i,y:j});
+					Lines.marks[i][j] = 0;
+				}
+			}
+		}
+		return hasMarks;
+	},
+	
+	makeMove : function(fromPlace, toPlace){
+		if (Lines.table[fromPlace.x][fromPlace.y]!=0 && Lines.table[toPlace.x][toPlace.y]==0){
+			if ( Lines.moveBall(fromPlace, toPlace) ) 
+				Lines.startMove();
+		}
+		else {
+			console.log('cant take a move');
+		}
+	},
+	
+	startMove: function(){
+		Lines.from = false;
+		if (Lines.clearMarked()){
+			// pass 
+		}
+		else {
+			for(var i=0; i<Lines.NEW_BALLS_COUNT; i++){
+				place = Lines.addRandomBall();
+				if (place===false)
+					Lines.gameOver();
+				else
+					Lines.checkBall(place);
+			}
+			
+			Lines.clearMarked();
+			if (Lines.ballCount==Lines.WIDTH*Lines.HEIGHT)
+				Lines.gameOver();
+		}
+		Lines.echoTable();
+	},
+	
+	endMove: function(){
+		
+	},
+	
+	doMove: function(){
+	
+	}, 
+	
+	gameOver: function(){
+		Lines.echoTable();
+		document.getElementById('gameover').style.display = 'block';
+		console.log('game over');
+		console.log('score: ' + Lines.points + ' pts');
+		Lines.saveScore();
+	},
+	
+	clickBall: function(place){
+		if (Lines.table[place.x][place.y]) {
+			Lines.from = place;
+			Lines.echoTable();
+		}
+		else{
+			if (Lines.from !== false){
+				Lines.makeMove(Lines.from, place);
+			}
+		}
+	},
+	
+	echoTable: function(){
+		var str = '<table>';
+		for (var i=0; i<Lines.WIDTH; i++){
+			str += '<tr>'
+			for (var j=0; j<Lines.HEIGHT; j++){
+				str += '<td onclick="Lines.clickBall({x:'+i+',y:'+j+'}); return false;" class="color'+Lines.table[i][j]+' '+(typeof Lines.from=='object'&&Lines.from.x==i&&Lines.from.y==j?'selected':'')+'" ></td>';
+			}
+			str += '</tr>';
+		}
+		str += '</table>points:' + Lines.points + ' balls:' + Lines.ballCount;
+		
+		document.getElementById('table').innerHTML = str;
+	},
+	
+	saveScore: function(){
+	
+	}
+};
+
+</script>
+
+
+<body>
+<style>
+.color1 {background-color: green}
+.color2 {background-color: red}
+.color3 {background-color: blue}
+.color4 {background-color: gray}
+.color5 {background-color: yellow}
+.color6 {background-color: black}
+.selected {border:3px solid}
+table {border: 1px solid gray; border-collapse:collapse}
+td {width:20px; height:20px; border: 1px solid rgb(0, 223, 36)}
+</style>
+<a href="#" onclick="Lines.newGame(5,5); return false;">5x5</a>
+<a href="#" onclick="Lines.newGame(7,7); return false;">7x7</a>
+<a href="#" onclick="Lines.newGame(9,9); return false;">9x9</a>
+<div id="table"></div>
+<div id="gameover">game over. <a href="#" onclick="Lines.newGame(9,9); return false;">start new</a></div>
+
+<script>
+Lines.newGame(9,9);
+Lines.echoTable();
+</script>
+
+</body>
+
+</html>

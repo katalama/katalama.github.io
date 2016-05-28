@@ -1,0 +1,56 @@
+body { margin:0px; }
+.container { width: 900px; margin:auto; height: 700px; margin-top: 100px; }
+//.container div { border: 1px solid; }
+
+.check-in-max, .choose-time-max, .choose-action-max  {
+	width:100%;
+	height:500px;
+}
+
+.choose-action-max div {
+	font-size: 20px;
+}
+
+.check-in-min, .choose-time-min, .choose-action-min {
+	width:100%;
+	height:100px;
+}
+
+.check-in-min h3, .choose-time-min h3, .choose-action-min h3 {
+	color: lightgray;
+	cursor: pointer;
+}
+
+.animate-show.ng-hide-remove {
+  transition: all linear 0.5s;
+}
+
+.animate-show.ng-hide {
+  opacity: 0;
+}
+
+.animate-show {
+  opacity: 1;
+}
+
+.active-action { background: yellow }
+
+.choose-action-min div.inactive-action { background: gray }
+
+.check-in-max input { margin-top: 15px; width: 400px; text-align:center; }
+
+.checkInTimes .btn-group + .btn-group { margin-left: 20px;}
+
+#calendar {height: 410px}
+#calendar th, #calendar td    { border: 6px solid white; width: 60px; text-align: center; vertical-align: bottom; font-size: 20px; }
+#calendar td { background: #FFA; vertical-align: middle; }
+#calendar tr { height: 60px; }
+
+#calendar .past { color: gray; background: white }
+#calendar .present { color: red;}
+#calendar .choosen {background: blue; color: white; }
+
+#calendar .prev-month { background: #FFFFDA }
+#calendar .next-month { background: ##C9FC92 }
+#calendar td.present, #calendar td.future { cursor: pointer; }
+// #calendar table, #calendar .btn-group { float:left; }
