@@ -334,6 +334,20 @@ Lines = {
 		str += '</table>points:' + Lines.points + ' balls:' + Lines.ballCount;
 		
 		document.getElementById('table').innerHTML = str;
+		
+		str = '';
+		for (var i=0; i<Lines.WIDTH; i++){
+			for (var j=0; j<Lines.HEIGHT; j++){
+				str += '<div onclick="Lines.clickBall({x:'+i+',y:'+j+'}); return false;" class="ball color'+Lines.table[i][j]+' '+(typeof Lines.from == 'object' && Lines.from.x==i && Lines.from.y == j ? 'selected' : '')+'" ></div>';
+			}
+		}
+		
+		document.getElementById('grid').style.gridTemplateRows = 'repeat(' + Lines.WIDTH + ', 1fr)';
+		document.getElementById('grid').style.gridTemplateColumns = 'repeat(' + Lines.HEIGHT + ', 1fr)';
+		document.getElementById('grid').style.width = Lines.WIDTH * 35 + 'px';
+		document.getElementById('grid').style.height = Lines.HEIGHT * 35 + 'px';
+		document.getElementById('grid').innerHTML = str;
+		document.getElementById('score').innerHTML = 'points:' + Lines.points + ' balls:' + Lines.ballCount;
 	},
 	
 	saveScore: function(){
@@ -346,6 +360,11 @@ Lines = {
 
 <body>
 <style>
+.ball {
+	border-radius: 50%; 
+	box-shadow: inset 0 0 20px rgba(0,0,0,.5);
+}
+.color0 {background-color: white; box-shadow: none;}
 .color1 {background-color: green}
 .color2 {background-color: red}
 .color3 {background-color: blue}
@@ -355,11 +374,22 @@ Lines = {
 .selected {border:3px solid}
 table {border: 1px solid gray; border-collapse:collapse}
 td {width:20px; height:20px; border: 1px solid rgb(0, 223, 36)}
+#grid {
+	background-color: rgb(244, 236, 251);
+	padding: 1px;
+	display: grid;
+	gap: 0.5px;
+	border-radius: 3px;
+	width: 200px;
+	height: 200px;
+}
 </style>
 <a href="#" onclick="Lines.newGame(5,5); return false;">5x5</a>
 <a href="#" onclick="Lines.newGame(7,7); return false;">7x7</a>
 <a href="#" onclick="Lines.newGame(9,9); return false;">9x9</a>
-<div id="table"></div>
+<div id="table" style="display:none"></div>
+<div id="grid"></div>
+<div id="score"></div>
 <div id="gameover">game over. <a href="#" onclick="Lines.newGame(9,9); return false;">start new</a></div>
 
 <script>
