@@ -399,14 +399,13 @@ td {
 	display: grid;
 	gap: 0.5px;
 	border-radius: 3px;
-	width: 200px;
-	height: 200px;
+	margin: auto;
 }
 
 #container {
 	width: 80%;
 	height: 80%;
-	margin: 20px;
+	margin: auto;
 }
 </style>
 <a href="#" onclick="Lines.newGame(5,5); return false;">5x5</a>
@@ -416,9 +415,8 @@ td {
 
 <div id="container">
 	<div id="grid"></div>
+	<div id="score"></div>
 </div>
-
-<div id="score"></div>
 
 <div id="gameover">game over. <a href="#" onclick="Lines.newGame(9,9); return false;">start new</a></div>
 
