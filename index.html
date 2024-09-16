@@ -18,10 +18,9 @@ Lines = {
 	ballCount: 0,
 	lastClear: 0,
 	
-	newGame : function(width, height){
+	newGame : function(width, height, checkSaved = false){
 		document.getElementById('gameover').style.display = 'none';
 		if (width<=0 || height<=0){
-			console.log('Illegal size of game table');
 			return false;
 		}
 		
@@ -39,12 +38,21 @@ Lines = {
 			Lines.empty[i] = column;
 		}
 		
-		Lines.table = JSON.parse(JSON.stringify(Lines.empty));
+		if (checkSaved && window.localStorage.getItem('gameState') !== null) {
+			var saved = JSON.parse(window.localStorage.getItem('gameState'));
+			Lines.table = saved.table;
+			Lines.WIDTH = saved.width;
+			Lines.HEIGHT = saved.height;
+			Lines.ballCount = saved.ballCount;
+			Lines.points = saved.points;
+		} else {
+			Lines.table = JSON.parse(JSON.stringify(Lines.empty));
+			
+			for(var i=0; i<Lines.INIT_BALLS_COUNT; i++)
+				Lines.addRandomBall();
+		}
+		
 		Lines.marks = JSON.parse(JSON.stringify(Lines.empty));
-		
-		for(var i=0; i<Lines.INIT_BALLS_COUNT; i++)
-			Lines.addRandomBall();
-		
 		Lines.echoTable();
 	},
 	
@@ -153,7 +161,6 @@ Lines = {
 				
 				t.childNodes[place.x].childNodes[place.y].style["background-color"] = 'orange';
 				t.childNodes[place.x].childNodes[place.y].innerHTML = cnt;
-				console.log(place);
 				cnt++;
 				
 				if(place.x==placeTo.x && place.y==placeTo.y)
@@ -228,7 +235,6 @@ Lines = {
 
 			if (count >= Lines.MIN_BALLS_IN_LINE){
 				Lines.points += count;
-				console.log('line found');
 				while (count){
 					Lines.markBall({x:x - dx, y:y - dy});
 					count--;
@@ -291,9 +297,11 @@ Lines = {
 			if (Lines.ballCount==Lines.WIDTH*Lines.HEIGHT)
 				Lines.gameOver();
 		}
+		
 		Lines.echoTable();
 	},
 	
+
 	endMove: function(){
 		
 	},
@@ -305,8 +313,6 @@ Lines = {
 	gameOver: function(){
 		Lines.echoTable();
 		document.getElementById('gameover').style.display = 'block';
-		console.log('game over');
-		console.log('score: ' + Lines.points + ' pts');
 		Lines.saveScore();
 	},
 	
@@ -346,7 +352,6 @@ Lines = {
 		document.getElementById('grid').style.gridTemplateColumns = 'repeat(' + Lines.HEIGHT + ', 1fr)';
 		
 		var container = document.getElementById('container');
-		console.log(container);
 		var minSize = Math.floor(Math.min(container.clientWidth / Lines.WIDTH, container.clientHeight / Lines.HEIGHT));
 		var cellWidth = minSize;
 		
@@ -355,6 +360,15 @@ Lines = {
 		
 		document.getElementById('grid').innerHTML = str;
 		document.getElementById('score').innerHTML = 'points:' + Lines.points + ' balls:' + Lines.ballCount;
+				
+		var gameState = {
+			'table': Lines.table, 
+			'width': Lines.WIDTH, 
+			'height': Lines.HEIGHT,
+			'ballCount': Lines.ballCount,
+			'points': Lines.points,
+		};
+		window.localStorage.setItem('gameState', JSON.stringify(gameState));
 	},
 	
 	saveScore: function(){
@@ -421,7 +435,7 @@ td {
 <div id="gameover">game over. <a href="#" onclick="Lines.newGame(9,9); return false;">start new</a></div>
 
 <script>
-Lines.newGame(9,9);
+Lines.newGame(9, 9, true);
 Lines.echoTable();
 </script>
 
